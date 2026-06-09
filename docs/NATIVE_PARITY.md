@@ -1,26 +1,83 @@
-# Native parity
+# Kryon Native Parity
 
-Kryon keeps Python as the reference implementation. Native ports are used for implementation checks, profiling, and fuzzing.
+Kryon keeps the Python package as the canonical reference implementation. Native C and Rust ports are included to verify implementation consistency and support native integration work.
 
-| Port | Status in v1.0 | Check |
-|---|---:|---|
-| Rust | Implemented | `cargo test`, `scripts/parity_runner.py`, `scripts/parity_corpus_runner.py` |
-| C | Implemented | `scripts/c_kat.py`, `scripts/c_corpus_parity.py` |
+---
 
-## Python/Rust
+## Parity matrix
 
-```bash
-python scripts/parity_runner.py
-python scripts/parity_corpus_runner.py --profile standard
-```
+| Port | Location | Status | Main checks |
+|---|---|---:|---|
+| Python | `kryon/` | canonical | pytest, KAT, corpus |
+| C | `native/c/` | reference | `make c-kat`, `make c-corpus` |
+| Rust | `native/rust/` | reference | `cargo test`, examples, fuzz target |
 
-When `cargo` is unavailable, the scripts report `skipped_cargo_not_found` or `skipped_by_argument` instead of pretending success.
+---
 
-## Python/C
+## Python ↔ C
+
+Run from repository root:
 
 ```bash
 python scripts/c_kat.py
 python scripts/c_corpus_parity.py --profile smoke
 ```
 
-When a C compiler is unavailable, the script reports `skipped_c_compiler_not_found`. When a compiler exists, it builds the native C runners and compares output with Python Kryon KAT/corpus values.
+Or directly from the C directory:
+
+```bash
+cd native/c
+make c-kat
+make c-corpus
+```
+
+Expected result:
+
+```text
+C output == Python output
+```
+
+---
+
+## Python ↔ Rust
+
+```bash
+python scripts/parity_runner.py
+python scripts/parity_corpus_runner.py --profile standard
+```
+
+Direct Rust commands:
+
+```bash
+cd native/rust
+cargo test --locked
+cargo run --example kryon_kat --locked
+```
+
+---
+
+## Skip behavior
+
+Some environments do not have `cc`, `gcc`, `clang`, or `cargo` installed. In that case, parity scripts report a clean skip instead of pretending success.
+
+| Missing tool | Status |
+|---|---|
+| C compiler | `skipped_c_compiler_not_found` |
+| Cargo | `skipped_cargo_not_found` |
+| Explicit skip flag | `skipped_by_argument` |
+
+---
+
+## Native metadata
+
+| Component | Version marker |
+|---|---|
+| C header | `KRYON_NATIVE_VERSION` |
+| Rust crate | `version = "1.0.0"` |
+| Python package | `__version__ = "1.0.0"` |
+
+---
+
+## Release rule
+
+A native port must not change canonical digest behavior. If native output differs from Python for the same input and output size, Python wins and the native port must be fixed.
