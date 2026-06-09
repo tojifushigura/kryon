@@ -1,4 +1,11 @@
-# Kryon v1.0 Specification
+# Kryon Specification
+
+> Version: **1.0.0**  
+> Status: canonical software release
+
+Kryon is a streaming one-way hash design with a dual-rail internal state. This document gives the implementation-facing specification used by the Python reference implementation and the native C/Rust ports.
+
+---
 
 ## 1. Parameters
 
@@ -12,52 +19,140 @@
 | Final absorb rounds | 14 |
 | Final mix rounds | 16 |
 | Post mix rounds | 6 |
-| Version domain tag | `CRWEV202` internal 64-bit tag |
+| Version tag | `0x4352574556323032` |
+| Final trailer tag | `CW02` |
 
-## 2. Construction idea
+---
 
-Kryon uses a dual-rail state:
+## 2. High-level construction
 
 ```mermaid
 flowchart LR
-  M[Message blocks] --> A[32-byte absorber]
-  A --> B[Binary 12x64 rail]
-  A --> R[Residue mod-257 rail]
-  R --> L[Residue-to-binary lift]
-  L --> B
-  B --> RI[Binary-to-residue injection]
-  RI --> R
-  B --> F[Final fold and squeeze]
+  M[Message bytes] --> B[32-byte block splitter]
+  B --> A[Absorb block]
+  A --> X[Binary rail: 12 x u64]
+  A --> R[Residue rail: 24 x mod 257]
+  R --> L[Residue lift]
+  L --> X
+  X --> I[Binary injection]
+  I --> R
+  X --> F[Final fold]
   R --> F
-  F --> D[Digest]
+  F --> S[Squeeze]
+  S --> D[Digest]
 ```
 
-The design avoids MD5-like 128-bit output and classic MD-style narrow chaining. It also avoids a plain sponge clone by maintaining two heterogeneous arithmetic rails that continuously inject into each other.
+Kryon maintains two heterogeneous arithmetic views of the message state:
 
-## 3. Padding
+| Rail | Role |
+|---|---|
+| Binary rail | rotation, xor, addition, 64-bit diffusion |
+| Residue rail | small-modulus mixing and cross-check entropy path |
 
-The final payload is:
+Both rails are updated for every absorbed block and are folded together during finalization.
+
+---
+
+## 3. Input processing
+
+Input is processed in 32-byte blocks. The streaming API stores incomplete data in an internal tail buffer and absorbs complete blocks immediately.
+
+Required streaming behavior:
+
+```text
+hash(data) == hash(split(data, any valid chunk plan))
+```
+
+The implementation exposes this through:
+
+```python
+from kryon import new
+
+h = new(out_bits=384)
+h.update(b"part-1")
+h.update(b"part-2")
+digest = h.digest()
+```
+
+---
+
+## 4. Padding and final block
+
+Finalization builds this payload:
 
 ```text
 tail || 0x80 || zeroes || uint64_le(total_len) || uint32_le(out_bits) || "CW02"
 ```
 
-The encoded final payload is a multiple of 32 bytes.
+The payload is padded until it is a multiple of 32 bytes.
 
-## 4. API stability
+The final block injects:
 
-The canonical digest for v1.0 is byte-for-byte compatible with v0.2–v0.8. New v1.0 helpers are domain-separated wrappers and file/manifest tooling; they do not change canonical vectors.
+- total message length;
+- selected output size;
+- final-block domain marker;
+- version tag.
 
-## 5. Domain-separated helpers
+---
 
-`kryon.security` defines a framed wrapper:
+## 5. Output sizes
+
+Kryon supports three canonical output sizes:
+
+| Output | Bytes | Hex length |
+|---|---:|---:|
+| Kryon-256 | 32 | 64 |
+| Kryon-384 | 48 | 96 |
+| Kryon-512 | 64 | 128 |
+
+The default CLI output is Kryon-384.
+
+---
+
+## 6. Domain-separated helpers
+
+`kryon.security` defines a framed wrapper for domain-separated and keyed operations:
 
 ```text
 "CWDS1000" || len(label) || len(key) || len(personalization) || len(data) || label || key || personalization || data
 ```
 
-The framed payload is then hashed by canonical Kryon. This prevents accidental collisions between different protocol uses, such as plain file hashing and keyed internal tags.
+The framed payload is then passed to canonical Kryon.
 
-## 6. Implementation status
+Examples:
 
-Kryon v1.0 includes the canonical Python implementation, CLI, file manifest tooling, keyed helpers, C reference port, Rust reference port, deterministic corpus, reduced-round analysis tools, parity checks, and release workflow.
+```python
+from kryon import domain_hexdigest, keyed_hexdigest
+
+domain_hexdigest("manifest", b"payload", 384)
+keyed_hexdigest("secret", b"payload", 384, personalization="app-v1")
+```
+
+---
+
+## 7. Canonical API
+
+| API | Purpose |
+|---|---|
+| `digest(data, out_bits=384)` | one-shot binary digest |
+| `hexdigest(data, out_bits=384)` | one-shot hex digest |
+| `new(data=b"", out_bits=384)` | hashlib-like streaming context |
+| `file_hexdigest(path, out_bits=384)` | streaming file digest |
+| `verify_hexdigest(expected, data, out_bits=384)` | constant-time verification helper |
+
+---
+
+## 8. Native parity requirement
+
+The C and Rust reference ports must match Python KAT vectors and corpus vectors.
+
+| Port | Required checks |
+|---|---|
+| C | KAT runner, corpus runner |
+| Rust | unit tests, KAT example, corpus example |
+
+---
+
+## 9. Version stability
+
+The canonical Kryon v1.0 digest is byte-for-byte stable for the included KAT vectors. Any future change to padding, constants, permutation, or canonical digest output requires a major version bump.
