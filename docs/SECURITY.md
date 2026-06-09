@@ -1,30 +1,82 @@
-# Kryon v1.0 Security Policy
+# Kryon Security Policy
 
-Kryon v1.0 is complete as a runnable software project: library, CLI, native reference ports, tests, corpus, fuzzing, parity checks, and launch workflow.
+This document describes how security reports and implementation issues should be handled for Kryon.
 
-## Supported version
+---
+
+## Supported versions
 
 | Version | Supported |
 |---|---:|
-| 1.0.x | yes |
-| 0.x | no, historical only |
+| `1.0.x` | ✅ yes |
+| `0.x` | historical only |
 
-## Intended uses
+---
 
-- File integrity manifests.
-- Internal checksum workflows.
-- Streaming digest generation.
-- Keyed digest workflows for controlled applications.
-- Cryptographic design research.
-- Public review, fuzzing, and implementation parity work.
+## Intended project scope
 
-## Reporting issues
+Kryon includes:
 
-Open a private security issue or contact the maintainer with:
+- streaming file digests;
+- CLI checksums;
+- manifest build/verify workflows;
+- keyed digest helpers;
+- domain/person separation helpers;
+- Python, C, and Rust reference implementations;
+- deterministic vectors and corpus checks;
+- fuzzing and reduced-round analysis tools.
+
+---
+
+## Reporting a security issue
+
+Please open a private security report or contact the maintainer with:
 
 1. affected version;
-2. input/vector or reduced-round profile;
-3. expected vs actual behavior;
-4. attack complexity estimate if applicable.
+2. affected component;
+3. input vector, corpus case, or reduced-round profile;
+4. expected behavior;
+5. actual behavior;
+6. reproduction steps;
+7. estimated impact.
 
-Do not publish practical breaks before maintainers have time to review and patch.
+Useful attachments:
+
+- minimal reproducer;
+- digest values;
+- compiler/runtime version;
+- OS and architecture;
+- crash log or sanitizer output.
+
+---
+
+## Severity guide
+
+| Severity | Example |
+|---|---|
+| Critical | practical full-round collision/preimage shortcut, memory corruption in native ports |
+| High | native parity mismatch, incorrect manifest verification, crash on valid input |
+| Medium | CLI misuse issue, malformed input handling bug |
+| Low | documentation error, unclear command, non-critical report formatting bug |
+
+---
+
+## Maintainer response flow
+
+```mermaid
+flowchart LR
+  A[Report received] --> B[Reproduce]
+  B --> C[Classify severity]
+  C --> D[Patch or document]
+  D --> E[Add regression test]
+  E --> F[Release fix]
+```
+
+---
+
+## Safe handling rules
+
+- Do not publish practical exploit details before maintainers have time to review.
+- Include a minimal test case when possible.
+- Keep reports focused on reproducible behavior.
+- For keys or tokens accidentally committed by users, rotate the secret first, then clean history.
