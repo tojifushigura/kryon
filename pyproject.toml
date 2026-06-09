@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,12 +10,30 @@ readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Kryon Project" }]
 license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["hash", "cryptography", "checksum", "integrity", "streaming", "manifest"]
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Security :: Cryptography",
-  "Development Status :: 4 - Beta",
+  "Topic :: System :: Archiving :: Packaging",
+  "Topic :: Utilities",
 ]
+
+[project.urls]
+Homepage = "https://github.com/tojifushigura/kryon"
+Repository = "https://github.com/tojifushigura/kryon"
+Issues = "https://github.com/tojifushigura/kryon/issues"
+Changelog = "https://github.com/tojifushigura/kryon/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/tojifushigura/kryon/tree/main/docs"
 
 [project.scripts]
 kryon = "kryon.cli:main"
