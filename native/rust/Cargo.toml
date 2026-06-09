@@ -1,0 +1,10 @@
+[package]
+name = "kryon-native"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+description = "Kryon native Rust reference port."
+
+[lib]
+name = "kryon_native"
+crate-type = ["rlib"]

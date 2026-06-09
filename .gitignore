@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Native build outputs
+native/c/kryon_kat
+native/c/kryon_corpus
+native/rust/target/
+
+# Generated reports
+/docs/reports/
+
+# Local files
+*.log
+.DS_Store

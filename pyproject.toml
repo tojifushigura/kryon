@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kryon"
+version = "1.0.0"
+description = "Kryon irreversible streaming hash toolkit with CLI, manifests, keyed digests, and native reference ports"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Kryon Project" }]
+license = { text = "MIT" }
+keywords = ["hash", "cryptography", "checksum", "integrity", "streaming", "manifest"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Security :: Cryptography",
+  "Development Status :: 4 - Beta",
+]
+
+[project.scripts]
+kryon = "kryon.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.setuptools.package-data]
+kryon = ["py.typed"]
