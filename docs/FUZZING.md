@@ -1,48 +1,105 @@
-# Fuzzing and attack automation
+# Kryon Fuzzing & Analysis
 
-## Python deterministic fuzz
+Kryon includes deterministic fuzzing, corpus mutation checks, reduced-round automation, and native parity runners.
+
+---
+
+## 1. Python deterministic fuzz
+
+Small smoke run:
 
 ```bash
 python scripts/fuzz_smoke.py --cases 256 --max-size 4096
+```
+
+Longer run:
+
+```bash
 python scripts/long_fuzz.py --cases 512 --max-size 16384
 ```
 
-## Corpus differential checks
+These checks verify:
+
+- one-shot digest stability;
+- streaming split equivalence;
+- supported output sizes;
+- deterministic behavior across repeated runs.
+
+---
+
+## 2. Corpus checks
 
 ```bash
 python scripts/corpus_diff_runner.py --profile standard
 python scripts/differential_clustering.py --profile standard
 ```
 
-## Reduced-round attack automation
+Corpus profiles:
+
+| Profile | Purpose |
+|---|---|
+| `smoke` | fast CI/local check |
+| `standard` | normal release check |
+| `long` | larger manual run |
+
+---
+
+## 3. Reduced-round automation
+
+Reduced-round tooling is intentionally separate from the canonical digest API.
 
 ```bash
 python scripts/reduced_attack_automation.py --mode sweep --rounds 1,2,3,4 --digest-bits 16
 python scripts/reduced_attack_automation.py --mode prefix --rounds 2 --digest-bits 16 --target-prefix-hex 00
 ```
 
-These commands intentionally target truncated reduced-round outputs. Collisions and prefix matches are expected for tiny digest sizes.
+Tiny digest sizes are expected to produce matches. These tools are used to inspect behavior, not to replace canonical release checks.
 
-## Toy SAT/SMT model
+---
+
+## 4. Toy model
 
 ```bash
 python scripts/toy_smt_model.py --variable-bits 12 --digest-bits 8 --rounds 1
 ```
 
-The v0.8 model uses deterministic enumeration but keeps SAT/SMT-style fields in the output. A future v0.9 backend can replace it with Z3/Boolector without changing report consumers.
+The toy model uses deterministic enumeration and SAT/SMT-style report fields.
 
-## Rust fuzzing plan
+---
+
+## 5. Rust fuzzing
 
 ```bash
 cd native/rust/fuzz
 cargo fuzz run kryon_streaming
 ```
 
-## C fuzzing plan
+Target behavior:
 
-The C port now has a real canonical implementation. The next step is adding AFL/libFuzzer harnesses around:
+```text
+digest(data) == digest(stream_split(data))
+```
+
+---
+
+## 6. C fuzzing ideas
+
+Useful native C fuzz targets:
 
 - one-shot digest;
 - streaming split equivalence;
+- invalid API argument handling;
 - C/Python corpus parity;
-- invalid API argument handling.
+- repeated `final()` calls on copied state.
+
+---
+
+## 7. Reports
+
+By default, scripts write reports to:
+
+```text
+docs/reports/
+```
+
+The directory is ignored by Git and can be safely regenerated locally.
