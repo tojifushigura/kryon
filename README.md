@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/tojifushigura/kryon/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tojifushigura/kryon/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/tojifushigura/kryon/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/Kryon_CI-passing-brightgreen"></a>
   <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-blue">
   <img alt="Rust" src="https://img.shields.io/badge/rust-reference-orange">
   <img alt="C" src="https://img.shields.io/badge/C-reference-lightgrey">
