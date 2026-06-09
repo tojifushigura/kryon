@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <b>Irreversible streaming hash toolkit for files, manifests, keyed digests, and native parity.</b>
+  <b>Kryon is a modern irreversible streaming hash toolkit built for file integrity, reproducible manifests, keyed digests, and native parity.</b>
 </p>
 
 <p align="center">
